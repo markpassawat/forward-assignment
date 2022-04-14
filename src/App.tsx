@@ -7,8 +7,6 @@ import Lending from './pages/Lending'
 function App() {
   return (
     <BrowserRouter>
-      {/* <Navbar />
-      <Lending /> */}
       <Suspense fallback={null}>
         <Routes>
           <Route element={<Navbar />}>

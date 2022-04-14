@@ -1,9 +1,9 @@
-import { Children, useState } from 'react'
-import { Outlet, Link, NavLink, useLocation } from 'react-router-dom'
+import { Outlet, NavLink, useLocation } from 'react-router-dom'
 import styled from 'styled-components'
 import Connector from '../Wallet/Connector'
 
 import { link } from '../../config/link'
+import Switch from '../Button/Switch'
 
 const Container = styled.div`
   display: flex;
@@ -18,6 +18,7 @@ const Menu = styled.div`
   column-gap: 50px;
   margin-left: 90px;
   color: #5d6588;
+  width: 50%;
 `
 
 const NavLinkActive = styled(NavLink)<{ active?: string }>`
@@ -37,19 +38,35 @@ const Active = styled.div`
 
   width: 54px;
   height: 3px;
-  left: 402px;
   top: 56px;
 `
 
 const Metamask = styled.div`
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: flex-end;
-  margin-left: 352px;
+  width: 50%;
 `
 
-const Navbar: React.FC = ({ children }) => {
-  const [active, setactive] = useState<boolean>(false)
+// const Switch = styled.div`
+//   width: 122px;
+//   height: 40px;
+//   left: calc(50% - 72px / 2);
+//   top: calc(50% - 32px / 2);
+//   border-radius: 62px;
+//   border: 1px solid transparent;
+//   background: linear-gradient(#22242d, #22242d),
+//     linear-gradient(
+//       90deg,
+//       rgba(101, 103, 112, 1) 0%,
+//       rgba(255, 255, 255, 1) 45%,
+//       rgba(101, 103, 112, 1) 100%
+//     );
+//   background-clip: padding-box, border-box;
+//   background-origin: padding-box, border-box;
+// `
+
+const Navbar: React.FC = () => {
   const { pathname } = useLocation()
 
   return (
@@ -81,8 +98,13 @@ const Navbar: React.FC = ({ children }) => {
 
         <Metamask>
           <Connector />
-          <div style={{ paddingLeft: '155px' }}>
-            <img src="/images/moon-stars.svg" alt="moon-stars" />
+
+          <div
+            style={{
+              display: 'flex',
+            }}
+          >
+            <Switch />
           </div>
         </Metamask>
       </Container>

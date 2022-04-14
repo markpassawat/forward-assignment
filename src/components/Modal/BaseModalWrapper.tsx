@@ -1,12 +1,15 @@
 import Modal from './Modal'
 import styled from 'styled-components'
 import { LendButton } from '../Button/LendButton'
+import Tooltip from '../Tooltip/Tooltip'
+import { useEffect, useState } from 'react'
+import Selector from '../Select/Selector'
 
 interface BaseModalWrapperProps {
   isModalVisible: boolean
   selectedToken: string
   balance: string
-  onBackdropClick: () => void
+  onClose: () => void
 }
 
 const ContentContainer = styled.div`
@@ -15,19 +18,27 @@ const ContentContainer = styled.div`
   column-gap: 30px;
   width: 726px;
   height: 556px;
-  border: 1px solid transparent;
   border-radius: 20px;
+  box-sizing: border-box;
+
+  border: 1px solid #fff;
+  backdrop-filter: blur(66px);
+  background: rgba(47, 50, 65, 0.6);
+
+  /* border: 1px solid transparent;
   background: linear-gradient(#22242d, #22242d),
     linear-gradient(
       180deg,
       rgba(101, 103, 112, 1) 0%,
       rgba(255, 255, 255, 1) 45%,
-      rgba(82, 82, 82, 1) 100%
-    );
+      rgba(101, 103, 112, 1) 100%
+    ); */
+  background-clip: padding-box, border-box;
+  background-origin: padding-box, border-box;
+
   background-clip: padding-box, border-box;
   background-origin: padding-box, border-box;
   padding: 30px;
-  box-sizing: border-box;
 `
 const ContentWrapper = styled.div`
   display: flex;
@@ -49,7 +60,7 @@ const Wrapper = styled.div`
   width: 94px;
   height: 126px;
   z-index: 1;
-  font-weight: 700;
+  font-weight: 500;
   font-size: 36px;
   line-height: 149%;
 `
@@ -62,25 +73,48 @@ const Divider = styled.div`
   background: linear-gradient(#22242d, #22242d),
     linear-gradient(
       180deg,
-      rgba(30, 33, 43, 1) 0%,
-      rgba(93, 101, 136, 0.5) 45%,
-      rgba(30, 33, 43, 1) 100%
+      rgba(30, 33, 43, 0.3) 0%,
+      rgba(93, 101, 136, 1) 45%,
+      rgba(30, 33, 43, 0.3) 100%
     );
   background-clip: padding-box, border-box;
   background-origin: padding-box, border-box;
 `
 
-const LendInput = styled.input`
-  display: flex;
-  align-items: center;
+const LendInput = styled.input.attrs({
+  type: 'number',
+})`
   width: 512px;
   height: 72px;
+
+  display: flex;
+  box-sizing: border-box;
+  padding: 20px;
+  box-shadow: 0px;
+
+  color: #fff;
+  font-weight: 600;
+  font-size: 39px;
+  line-height: 149%;
+  outline: none;
+  align-items: center;
+
   background: #2f3241;
   border: 2px solid #34384c;
   box-sizing: border-box;
   border-radius: 12px;
+
+  ::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  ::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
 `
-const Percent = styled.div`
+
+const Percent = styled.div<{ active?: boolean }>`
   display: flex;
   justify-content: center;
   align-items: center;
@@ -88,47 +122,74 @@ const Percent = styled.div`
   height: 40px;
   border-radius: 40px;
   font-weight: 600;
+  cursor: pointer;
   border: 1px solid transparent;
 
-  background: linear-gradient(#22242d, #22242d),
-    linear-gradient(
-      90deg,
-      rgba(101, 103, 112, 1) 0%,
-      rgba(255, 255, 255, 1) 45%,
-      rgba(101, 103, 112, 1) 100%
-    );
+  background: ${({ active }) =>
+    active
+      ? 'linear-gradient(89.39deg,#a64690 0.9%,#f97082 46.32%, #ff6666 99.99%)'
+      : 'linear-gradient(to right, #48484f, #2b2c34), linear-gradient( 90deg,rgba(101, 103, 112, 1) 0%, rgba(255, 255, 255, 1) 45%,rgba(101, 103, 112, 1) 100% )'};
+
   background-clip: padding-box, border-box;
   background-origin: padding-box, border-box;
-  &:hover {
-    background: linear-gradient(
-      89.39deg,
-      #a64690 0.9%,
-      #f97082 46.32%,
-      #ff6666 99.99%
-    );
-    border-radius: 69px;
-  }
+
+  border-radius: 69px;
 `
 
-const Header = styled.div`
-  color: #a5adcf;
+const Flex = styled.div<{
+  direction?: string
+  justifyContent?: string
+  alignItems?: string
+  rowGap?: string
+  colGap?: string
+}>`
+  display: flex;
+  flex-direction: ${({ direction }) => direction};
+  justify-content: ${({ justifyContent }) => justifyContent};
+  align-items: ${({ alignItems }) => alignItems};
+  row-gap: ${({ rowGap }) => rowGap};
+  column-gap: ${({ colGap }) => colGap};
 `
-const Data = styled.div`
-  font-weight: 600;
-  font-size: 31px;
-  line-height: 149%;
+
+const Typo = styled.div<{
+  fs?: string
+  fw?: string
+  cl?: string
+  lh?: string
+  ml?: string
+  mr?: string
+}>`
+  font-size: ${({ fs }) => (fs ? fs : '18px')};
+  font-weight: ${({ fw }) => (fw ? fw : '600')};
+  color: ${({ cl }) => (cl ? cl : '#a5adcf')};
+  line-height: ${({ lh }) => (lh ? lh : '149%')};
+  margin-left: ${({ ml }) => ml};
+  margin-right: ${({ mr }) => mr};
 `
+
+const lend = [25, 50, 75, 100]
 
 const BaseModalWrapper: React.FC<BaseModalWrapperProps> = ({
-  onBackdropClick,
+  onClose,
   isModalVisible,
   balance,
   selectedToken,
 }) => {
+  const [inputValue, setInputValue] = useState<string>('0')
+  const [selectedPercent, setSelectedPercent] = useState<string>('0')
+
+  const setPercent = (percent: any) => {
+    let value: any = balance.replaceAll(',', '')
+    value = parseInt(value, 10) * percent * 0.01
+
+    setInputValue(value)
+    setSelectedPercent(percent)
+  }
+
   if (!isModalVisible) return null
 
   return (
-    <Modal onBackdropClick={onBackdropClick}>
+    <Modal>
       <ContentContainer>
         <img
           src="/images/bg-popup.svg"
@@ -141,66 +202,87 @@ const BaseModalWrapper: React.FC<BaseModalWrapperProps> = ({
         </Wrapper>
         <Divider />
         <ContentWrapper>
-          <div
-            style={{ display: 'flex', flexDirection: 'column', rowGap: '12px' }}
-          >
-            How much do you want to lend?
-            <LendInput />
-            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              Balance: {balance} {selectedToken}
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-evenly' }}>
-              <Percent>25%</Percent>
-              <Percent>50%</Percent>
-              <Percent>75%</Percent>
-              <Percent>100%</Percent>
-            </div>
-          </div>
-          <div style={{ display: 'flex', columnGap: '70px' }}>
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                rowGap: '20px',
-              }}
-            >
-              <div>
-                <Header>Collateralized</Header>
-                <Data>150%</Data>
-              </div>
-              <div>
-                <Header>Asset</Header>
-                <Data>{selectedToken}</Data>
-              </div>
-            </div>
-            <div>
-              <div>
-                <Header>Gas fee</Header>
-              </div>
-              <div style={{ color: '#FB3A70', fontWeight: '500' }}>
-                insufficient fund for gas
-              </div>
-            </div>
-          </div>
-          <div
+          <img
+            src="/images/Close.svg"
+            alt="colorful-bg"
+            onClick={onClose}
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
+              position: 'absolute',
+              right: '7px',
+              top: '16px',
+              // right: '367px',
+              // top: '189px',
+              cursor: 'pointer',
             }}
-          >
-            <div style={{ color: '#30E0A1' }}>
-              You will recieve iBUSD
-              <img
-                src="/images/tooltip.svg"
-                alt="tooltip"
-                style={{ marginLeft: '16px' }}
-              />
+          />
+
+          <Flex direction="column" rowGap="12px">
+            How much do you want to lend?
+            <LendInput
+              id="lend-value"
+              value={inputValue}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>): void =>
+                setInputValue(e.target.value)
+              }
+            />
+            <Selector selectedToken={selectedToken} />
+            <Flex justifyContent="flex-end">
+              <Typo fs="16px" fw="500">
+                Balance: &nbsp;
+              </Typo>
+              <Typo cl="#fff" fw="500">
+                {balance} {selectedToken}
+              </Typo>
+            </Flex>
+            <Flex justifyContent="space-evenly">
+              {lend.map((item) => (
+                <Percent
+                  key={item}
+                  active={selectedPercent === `${item}`}
+                  onClick={() => setPercent(`${item}`)}
+                >
+                  {item}%
+                </Percent>
+              ))}
+            </Flex>
+          </Flex>
+          <Flex colGap="70px">
+            <Flex direction="column" rowGap="20px">
+              <div>
+                <Typo fw="300">Collateralized</Typo>
+                <Typo fw="600" fs="31px" cl="#fff">
+                  150%
+                </Typo>
+              </div>
+              <div>
+                <Typo fw="300">Asset</Typo>
+                <Typo fw="600" fs="31px" cl="#fff">
+                  {selectedToken}
+                </Typo>
+              </div>
+            </Flex>
+            <div>
+              <Typo fw="300">Gas fee</Typo>
+              <Typo cl="#FB3A70" fw="500">
+                insufficient fund for gas
+              </Typo>
             </div>
+          </Flex>
+          <Flex alignItems="center" justifyContent="space-between">
+            <Typo cl="#30E0A1" fw="500" mr="-35px">
+              You will recieve i{selectedToken}
+            </Typo>
+            <Tooltip
+              content=" iTokens are minted when you deposit corresponding assets. They
+            increase in value and are worth more than the underlying asset!"
+            >
+              <img src="/images/tooltip.svg" alt="tooltip" />
+            </Tooltip>
+
             <LendButton w="241px" m="0">
               Lend
             </LendButton>
-          </div>
+          </Flex>
         </ContentWrapper>
       </ContentContainer>
     </Modal>

@@ -9,7 +9,7 @@ const Button = styled.div`
   border: 1px solid transparent;
   cursor: pointer;
 
-  background: linear-gradient(#22242d, #22242d),
+  background: linear-gradient(to right, #292a2e, #151619),
     linear-gradient(
       90deg,
       rgba(101, 103, 112, 1) 0%,
@@ -31,39 +31,6 @@ const Connector = () => {
         window.location.reload()
       }
     })
-    await provider.send('eth_requestAccounts', [])
-
-    const signer = provider.getSigner()
-    const myAddress = await signer.getAddress()
-    // const myBalance = await signer.getBalance()
-
-    const busdAddress = '0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56'
-    const busdAbi = [
-      // Some details about the token
-      'function name() external view returns (string)',
-      'function symbol() view returns (string)',
-
-      // Get the account balance
-      'function balanceOf(address) view returns (uint)',
-
-      // Send some of your tokens to someone else
-      'function transfer(address to, uint amount)',
-
-      // An event triggered whenever anyone transfers to someone else
-      'event Transfer(address indexed from, address indexed to, uint amount)',
-    ]
-
-    const busdContract = new ethers.Contract(busdAddress, busdAbi, provider)
-
-    const busdSymbol = await busdContract.symbol()
-    const binaceHotwallet = '0x8894e0a0c962cb723c1976a4421c95949be2d4e3'
-    const balance = await busdContract.balanceOf(binaceHotwallet)
-
-    const busdBalance = new Intl.NumberFormat().format(
-      Math.trunc(parseInt(ethers.utils.formatEther(balance)))
-    )
-
-    setData(busdBalance + ' ' + busdSymbol)
 
     // check if metamask connected
     const isMetaMaskConnected = async () => {
@@ -71,12 +38,48 @@ const Connector = () => {
       return accounts.length > 0
     }
 
-    await isMetaMaskConnected().then((connected) => {
+    await isMetaMaskConnected().then(async (connected) => {
+      await provider.send('eth_requestAccounts', [])
+
       if (connected) {
         setIsLogin(true)
+        const signer = provider.getSigner()
+        const myAddress = await signer.getAddress()
+
+        const busdAddress = '0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56'
+        const busdAbi = [
+          'function name() external view returns (string)',
+          'function symbol() view returns (string)',
+          'function balanceOf(address) view returns (uint)',
+        ]
+        const busdContract = new ethers.Contract(busdAddress, busdAbi, provider)
+
+        const busdSymbol = await busdContract.symbol()
+        const binaceHotwallet = '0x8894e0a0c962cb723c1976a4421c95949be2d4e3'
+        const balance = await busdContract.balanceOf(binaceHotwallet)
+
+        const busdBalance = Intl.NumberFormat().format(
+          Math.trunc(parseInt(ethers.utils.formatEther(balance)))
+        )
+        setData(busdBalance + ' ' + busdSymbol)
       }
     })
   }
+
+  const accountChanged = () => {
+    window.ethereum.on('accountsChanged', (accounts: any) => {
+      if (accounts.length > 0) {
+        setIsLogin(true)
+        loadData()
+      } else {
+        setIsLogin(false)
+      }
+    })
+  }
+
+  useEffect(() => {
+    accountChanged()
+  }, [window.ethereum])
 
   useEffect(() => {
     loadData()
@@ -92,7 +95,7 @@ const Connector = () => {
 
   const notConnect = (
     <>
-      <img src="/images/wallet.svg" alt="Signal" />
+      <img src="/images/wallet.png" alt="wallet" width={'28px'} />
       <p>Connect Wallet</p>
     </>
   )
@@ -102,12 +105,17 @@ const Connector = () => {
       <Button onClick={loadData}>
         <div
           style={{
+            height: '35px',
             display: 'flex',
+            boxSizing: 'border-box',
+            alignItems: 'center',
+            justifyContent: 'center',
+
             columnGap: '15px',
             padding: '10px 12px 10px 20px',
           }}
         >
-          {isLogin ? connected : 'Connect Wallet'}
+          {isLogin ? connected : notConnect}
         </div>
       </Button>
     </div>

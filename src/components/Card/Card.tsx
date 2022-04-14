@@ -16,7 +16,6 @@ const Flex = styled.div`
   align-items: center;
 `
 const Card = styled.div`
-  box-sizing: border-box;
   width: 335px;
   height: auto;
   border-radius: 20px;

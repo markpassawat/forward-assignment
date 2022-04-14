@@ -1,10 +1,7 @@
 import ReactDOM from 'react-dom'
 import styled from 'styled-components'
-const ModalOverlay = () => {}
 
-interface ModalProps {
-  onBackdropClick: () => void
-}
+interface ModalProps {}
 
 const Popup = styled.div`
   width: 100%;
@@ -21,11 +18,8 @@ const Popup = styled.div`
 
 const protalElement = document.getElementById('overlays')
 
-const Modal: React.FC<ModalProps> = ({ onBackdropClick, children }) => {
-  return ReactDOM.createPortal(
-    <Popup onClick={onBackdropClick}>{children}</Popup>,
-    protalElement!
-  )
+const Modal: React.FC<ModalProps> = ({ children }) => {
+  return ReactDOM.createPortal(<Popup>{children}</Popup>, protalElement!)
 }
 
 export default Modal

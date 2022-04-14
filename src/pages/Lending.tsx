@@ -1,8 +1,8 @@
-import React, { useState } from 'react'
+import React, { createContext, useState } from 'react'
 import styled from 'styled-components'
 import { StyledCard } from '../components/Card/Card'
 import BaseModalWrapper from '../components/Modal/BaseModalWrapper'
-import useTokenBalance from '../hooks/useToken'
+import useTokenBalance from '../hooks/useTokenBalance'
 
 const Container = styled.div`
   margin: 0 auto;
@@ -102,10 +102,10 @@ const Lending = () => {
         </CardWrapper>
 
         <BaseModalWrapper
-          selectedToken={selectedToken}
           balance={balance}
+          selectedToken={selectedToken}
           isModalVisible={isModalVisible}
-          onBackdropClick={() => toggleModal('')}
+          onClose={() => toggleModal('')}
         />
       </Container>
     </>
